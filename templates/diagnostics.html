@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diagnostics</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Roboto', sans-serif;
+        }
+
+        h1 {
+            font-size: 3rem;
+            font-weight: bold;
+            color: #343a40;
+        }
+
+        h2 {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #343a40;
+        }
+
+        .player {
+            display: inline-block;
+            font-weight: normal;
+            background-color: white;
+            padding: 3px;
+            border-radius: 3px;
+            color: black;
+        }
+
+        .player.pressed {
+            font-weight: bold;
+            color: white;
+        }
+
+        #player1.pressed {
+            background-color: #FF0000;
+        }
+
+        #player2.pressed {
+            background-color: #0000FF;
+        }
+
+        #player3.pressed {
+            background-color: #008000;
+        }
+
+        #player4.pressed {
+            background-color: #FFFF00;
+        }
+
+        #host.pressed {
+            background-color: #000000;
+        }
+    </style>
+</head>
+<body class="container">
+    <h1 class="text-center my-4">Diagnostics</h1>
+    <div id="button-status">
+        <h2>Button Status:</h2>
+        <p><span class="player" id="player1">Player 1 (Red):</span> <span id="player1-status">Not Pressed</span></p>
+        <p><span class="player" id="player2">Player 2 (Blue):</span> <span id="player2-status">Not Pressed</span></p>
+        <p><span class="player" id="player3">Player 3 (Green):</span> <span id="player3-status">Not Pressed</span></p>
+        <p><span class="player" id="player4">Player 4 (Yellow):</span> <span id="player4-status">Not Pressed</span></p>
+        <p><span class="player" id="host">Host (Black):</span> <span id="host-status">Not Pressed</span></p>
+    </div>
+    <a class="d-block mt-3" href="/">Back to Main Menu</a>
+    <script>
+        const buttonStatusText = ['Not Pressed', 'Pressed'];
+        const playerIds = ['player1', 'player2', 'player3', 'player4', 'host'];
+        
+        function updateButtonStatus(data) {
+            data.forEach((pressed, index) => {
+                document.getElementById(`${playerIds[index]}-status`).innerText = buttonStatusText[Number(pressed)];
+                if (pressed) {
+                    document.getElementById(playerIds[index]).classList.add('pressed');
+                } else {
+                    document.getElementById(playerIds[index]).classList.remove('pressed');
+                }
+            });
+        }
+
+        function pollButtonStatus() {
+            fetch('/button_status')
+                .then(response => response.json())
+                .then(updateButtonStatus)
+                .finally(() => setTimeout(pollButtonStatus, 100));
+        }
+
+        pollButtonStatus();
+    </script>
+</body>
+</html>

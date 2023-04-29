@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>New Game</title>
+    <!-- Add Bootstrap CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.4.1/socket.io.min.js"></script>
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Roboto', sans-serif;
+        }
+
+        h1 {
+            font-size: 3rem;
+            font-weight: bold;
+            color: #343a40;
+        }
+
+        h2 {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #343a40;
+        }
+
+        #game-screen {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 60vh;
+        }
+
+        #scores {
+            display: flex;
+            justify-content: center;
+            margin-top: 2rem;
+        }
+
+        .score {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-right: 2rem;
+        }
+
+        .score:last-child {
+            margin-right: 0;
+        }
+
+        .lcd {
+            font-family: 'Digital-7 Mono', sans-serif;
+            font-size: 2rem;
+            font-weight: bold;
+            color: #343a40;
+        }
+    </style>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Digital-7 Mono">
+</head>
+<body class="container">
+    <h1 class="text-center my-4">New Game</h1>
+    <button type="button" class="btn btn-primary" onclick="startGame()">Start Game</button>
+    <a class="d-block mt-3" href="/">Back to Main Menu</a>
+
+    <script>
+        function startGame() {
+            // Hide the start game button
+            document.querySelector('button').style.display = 'none';
+
+            // Create the game screen elements
+            const gameScreen = document.createElement('div');
+            gameScreen.id = 'game-screen';
+            document.body.appendChild(gameScreen);
+
+            const buzzedPlayer = document.createElement('h2');
+            buzzedPlayer.id = 'buzzed-player';
+            buzzedPlayer.innerText = 'READY';
+            buzzedPlayer.style.textAlign = 'center';
+            gameScreen.appendChild(buzzedPlayer);
+
+            const buzzerAudio = new Audio('/static/buzzer.mp3');
+
+            // Set up the game state
+            const numberOfPlayers = 4;
+            const backgroundColor = '#FFFFFF';
+            document.body.style.backgroundColor = backgroundColor;
+            const playerColors = ['#FF0000', '#0000FF', '#008000', '#FFFF00'];
+
+            let lock = false;
+
+            // Initialize the WebSocket connection
+            const socket = io();
+
+            // Handle WebSocket events
+            socket.on('player_buzz', function(playerNumber) {
+                if (!lock) {
+                    buzzedPlayer.innerText = 'Player ' + playerNumber + ' buzzed!';
+                    gameScreen.style.backgroundColor = playerColors[playerNumber - 1];
+                    lock = true;
+                    buzzerAudio.play();
+                }
+            });
+
+            socket.on('reset', function() {
+                buzzedPlayer.innerText = 'READY';
+                gameScreen.style.backgroundColor = backgroundColor;
+                lock = false;
+            });
+
+            // Listen for button presses and emit WebSocket events
+            function handleButtonPress(buttonIndex) {
+                if (buttonIndex === 4) { // Host button
+                    socket.emit('host_reset');
+                } else { // Player buttons
+                    socket.emit('player_buzz', buttonIndex + 1);
+                }
+            }
+
+            // Poll the button status and handle button presses
+            function pollButtonStatus() {
+                fetch('/button_status')
+                    .then(response => response.json())
+                    .then(data => {
+                        data.forEach((pressed, index) => {
+                            if (pressed) {
+                                handleButtonPress(index);
+                            }
+                        });
+                    })
+                    .finally(() => setTimeout(pollButtonStatus, 100));
+            }
+
+            pollButtonStatus();
+        }
+
+        // Score display and controls
+        const scoresContainer = document.createElement('div');
+        scoresContainer.id = 'scores';
+        document.body.appendChild(scoresContainer);
+
+        const numberOfPlayers = 4;
+        const playerScores = new Array(numberOfPlayers).fill(0);
+
+        function updateScore(playerIndex, delta) {
+            playerScores[playerIndex] += delta;
+            document.getElementById(`score-${playerIndex}`).innerText = playerScores[playerIndex];
+        }
+
+        for (let i = 0; i < numberOfPlayers; i++) {
+            const score = document.createElement('div');
+            score.className = 'score';
+            scoresContainer.appendChild(score);
+
+            const nameLabel = document.createElement('h2');
+            nameLabel.innerText = `Player ${i + 1}`;
+            score.appendChild(nameLabel);
+
+            const lcd = document.createElement('div');
+            lcd.className = 'lcd';
+            lcd.id = `score-${i}`;
+            lcd.innerText = playerScores[i];
+            score.appendChild(lcd);
+
+            const controls = document.createElement('div');
+            score.appendChild(controls);
+
+            const incrementButton = document.createElement('button');
+            incrementButton.className = 'btn btn-success';
+            incrementButton.innerText = '+';
+            incrementButton.onclick = () => updateScore(i, 1);
+            controls.appendChild(incrementButton);
+
+            const decrementButton = document.createElement('button');
+            decrementButton.className = 'btn btn-danger ml-2';
+            decrementButton.innerText = '-';
+            decrementButton.onclick = () => updateScore(i, -1);
+            controls.appendChild(decrementButton);
+        }
+    </script>
+</body>
+</html>
