@@ -1,6 +1,7 @@
 from flask import Flask, render_template, jsonify, request
 from flask_socketio import SocketIO, emit
 import RPi.GPIO as GPIO
+import os
 
 app = Flask(__name__)
 socketio = SocketIO(app)
