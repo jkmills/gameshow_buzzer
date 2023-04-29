@@ -4,31 +4,25 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Main Menu</title>
+    <!-- Add Bootstrap CSS -->
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-    <style>
-        body {
-            background-color: #f8f9fa;
-            font-family: 'Roboto', sans-serif;
-        }
-
-        h1 {
-            font-size: 3rem;
-            font-weight: bold;
-            color: #343a40;
-        }
-
-        .menu-button {
-            font-size: 1.5rem;
-            margin-bottom: 1rem;
-        }
-    </style>
 </head>
 <body class="container">
     <h1 class="text-center my-4">Main Menu</h1>
-    <div class="d-flex flex-column">
-        <a href="/new_game" class="btn btn-primary menu-button">New Game</a>
-        <a href="/reboot" class="btn btn-secondary menu-button">Reboot</a>
-        <a href="/diagnostics" class="btn btn-secondary menu-button">Diagnostics</a>
-    </div>
+    <a class="btn btn-primary" href="/new_game">New Game</a>
+    <a class="btn btn-info" href="/diagnostics">Diagnostics</a>
+    <button class="btn btn-danger" onclick="reboot()">Reboot</button>
+
+    <script>
+        function reboot() {
+            const confirmed = confirm("Are you sure you want to reboot the Raspberry Pi?");
+            if (confirmed) {
+                fetch('/reboot', {method: 'POST'})
+                    .then(() => alert('Rebooting Raspberry Pi...'))
+                    .catch(() => alert('Error rebooting Raspberry Pi.'));
+            }
+        }
+    </script>
 </body>
 </html>
+

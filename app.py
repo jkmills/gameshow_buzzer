@@ -23,10 +23,10 @@ def new_game():
         return jsonify({"success": True})
     return render_template('new_game.html')
 
-@app.route('/reboot')
+@app.route('/reboot', methods=['POST'])
 def reboot():
-    # Reboot the Raspberry Pi
-    return "Rebooting..."
+    os.system('sudo reboot now')
+    return '', 204
 
 @app.route('/diagnostics')
 def diagnostics():
